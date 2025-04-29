@@ -18,6 +18,7 @@ def draw(images, labels, boxes, scores, thrh = 0.6):
         box = boxes[i][scr > thrh]
 
         for b in box:
+            print(lab[i].item(), scr[i].item())
             draw.rectangle(list(b), outline='red',)
             draw.text((b[0], b[1]), text=str(lab[i].item()), fill='blue', )
 
@@ -27,7 +28,8 @@ def draw(images, labels, boxes, scores, thrh = 0.6):
 def main(args, ):
     """main
     """
-    sess = ort.InferenceSession(args.onnx_file)
+    providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+    sess = ort.InferenceSession(args.onnx_file, providers=providers)
     print(ort.get_device())
 
     im_pil = Image.open(args.im_file).convert('RGB')
@@ -35,7 +37,7 @@ def main(args, ):
     orig_size = torch.tensor([w, h])[None]
 
     transforms = T.Compose([
-        T.Resize((640, 640)),
+        T.Resize((576, 768)),
         T.ToTensor(),
     ])
     im_data = transforms(im_pil)[None]

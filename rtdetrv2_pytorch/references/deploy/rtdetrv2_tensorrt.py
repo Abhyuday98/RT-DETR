@@ -12,7 +12,7 @@ import tensorrt as trt
 
 import torch
 import torchvision.transforms as T 
-
+import cv2
 
 
 
@@ -191,7 +191,8 @@ def draw(images, labels, boxes, scores, thrh = 0.6):
 
         for l, b in enumerate(box):
             draw.rectangle(list(b), outline='red',)
-            draw.text((b[0], b[1]), text=str(lab[l].item()), fill='blue', )
+            print(lab[l].item(), scr[l].item())
+            draw.text((b[0], b[1]), text=str(scr[l].item()), fill='blue', )
 
         im.save(f'results_{i}.jpg')
 
@@ -210,8 +211,14 @@ if __name__ == '__main__':
     w, h = im_pil.size
     orig_size = torch.tensor([w, h])[None].to(args.device)
 
+    im_cv2 =  cv2.imread(args.im_file)
+    im_cv2 = cv2.cvtColor(im_cv2, cv2.COLOR_BGR2RGB)
+
+    resized = cv2.resize(im_cv2, (768, 576), interpolation=cv2.INTER_LINEAR)
+
+
     transforms = T.Compose([
-        T.Resize((640, 640)),
+        T.Resize((576, 768)),
         T.ToTensor(),
     ])
     im_data = transforms(im_pil)[None]
@@ -221,6 +228,13 @@ if __name__ == '__main__':
         'orig_target_sizes': orig_size.to(args.device),
     }
 
+    
+
+    # run 10 times
+    m.warmup(blob, 1)
+    print('warmup done.')
+    print('engine speed:', m.speed(blob, 10))
+
     output = m(blob)
 
-    draw([im_pil], output['labels'], output['boxes'], output['scores'])
+    draw([im_pil], output['labels'], output['boxes'], output['scores'], thrh=0.3)

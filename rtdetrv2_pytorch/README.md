@@ -100,6 +100,13 @@ rtdetrv2_r18vd(_sp4)| grid_sampling | 86,400 | 47.9 | 64.9 | [url](https://githu
 1. Training
 ```shell
 CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=9909 --nproc_per_node=4 tools/train.py -c path/to/config --use-amp --seed=0 &> log.txt 2>&1 &
+
+python3 tools/train.py -c configs/rtdetrv2/rtdetrv2_r18vd_120e_coco.yml -t checkpoints/rtdetrv2_r18vd_120e_coco_rerun_48.1.pth --use-amp --seed=0
+
+python3 tools/train.py -c configs/rtdetrv2/rtdetrv2_r50vd_m_7x_coco.yml -t checkpoints/rtdetrv2_r50vd_m_7x_coco_ema.pth --use-amp --seed=0
+
+python3 tools/train.py -c configs/rtdetrv2/rtdetrv2_r50vd_m_7x_coco_480_640.yml -t checkpoints/rtdetrv2_r50vd_m_7x_coco_ema.pth --use-amp --seed=0
+
 ```
 
 <!-- <summary>2. Testing </summary> -->
@@ -117,13 +124,15 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=9909 --nproc_per_node=4 tool
 <!-- <summary>4. Export onnx </summary> -->
 4. Export onnx
 ```shell
-python tools/export_onnx.py -c path/to/config -r path/to/checkpoint --check
+python3 tools/export_onnx.py -c /workspace/rtdetr-v2/configs/rtdetrv2/rtdetrv2_r50vd_m_7x_coco_576_768.yml -r /workspace/rtdetr-v2/output/rtdetrv2_r50vd_m_6x_coco_576_768/best.pth --check
 ```
 
 <!-- <summary>5. Export tensorrt </summary> -->
 5. Export tensorrt
 ```shell
-python tools/export_trt.py -i path/to/onnxfile
+python3 tools/export_trt.py -i /workspace/rtdetr-v2/model.onnx
+
+trtexec --onnx=model.onnx --saveEngine=model_576_768.engine
 ```
 
 <!-- <summary>6. Inference </summary> -->
@@ -131,9 +140,12 @@ python tools/export_trt.py -i path/to/onnxfile
 
 Support torch, onnxruntime, tensorrt and openvino, see details in *references/deploy*
 ```shell
-python references/deploy/rtdetrv2_onnxruntime.py --onnx-file=model.onnx --im-file=xxxx
-python references/deploy/rtdetrv2_tensorrt.py --trt-file=model.trt --im-file=xxxx
-python references/deploy/rtdetrv2_torch.py -c path/to/config -r path/to/checkpoint --im-file=xxx --device=cuda:0
+python3 references/deploy/rtdetrv2_onnxruntime.py --onnx-file=/workspace/rtdetr-v2/model_576_768.onnx --im-file=/train_data/val/images/FFB_20240112_010503337113_0017206.png
+python3 references/deploy/rtdetrv2_tensorrt.py --trt-file=/workspace/rtdetr-v2/model_576_768.engine --im-file=/train_data/val/images/FFB_20240112_010503337113_0017206.png
+python3 references/deploy/rtdetrv2_torch.py -c /workspace/rtdetr-v2/configs/rtdetrv2/rtdetrv2_r18vd_120e_coco.yml -r /workspace/rtdetr-v2/output/rtdetrv2_r18vd_120e_coco/best.pth --im-file=/train_data/val/images/FFB_20240112_010503337113_0017206.png --device=cuda:0
+
+python3 references/deploy/rtdetrv2_torch.py -c configs/rtdetrv2/rtdetrv2_r50vd_m_7x_coco.yml -r output/rtdetrv2_r50vd_m_6x_coco/best.pth --im-file=/train_data/val/images/FFB_20240112_010503337113_0017206.png --device=cuda:0
+
 ```
 </details>
 

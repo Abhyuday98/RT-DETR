@@ -22,6 +22,7 @@ def draw(images, labels, boxes, scores, thrh = 0.6):
 
         for j,b in enumerate(box):
             draw.rectangle(list(b), outline='red',)
+            print(lab[j].item(), scrs[j].item())
             draw.text((b[0], b[1]), text=f"{lab[j].item()} {round(scrs[j].item(),2)}", fill='blue', )
 
         im.save(f'results_{i}.jpg')
@@ -62,7 +63,8 @@ def main(args, ):
     orig_size = torch.tensor([w, h])[None].to(args.device)
 
     transforms = T.Compose([
-        T.Resize((640, 640)),
+        T.Resize((576, 768)),
+        # T.Resize((480, 640)),
         T.ToTensor(),
     ])
     im_data = transforms(im_pil)[None].to(args.device)
